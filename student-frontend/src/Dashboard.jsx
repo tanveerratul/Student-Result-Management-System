@@ -1,3 +1,5 @@
+import BangladeshMap from './BangladeshMap';
+
 function Dashboard({ setActivePage }) {
   return (
     <>
@@ -30,6 +32,16 @@ function Dashboard({ setActivePage }) {
         </div>
       </div>
 
+    {/* Map Section */}
+      <div className="map-section" style={{ marginTop: '20px', marginBottom: '30px', background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+        <h3 style={{ marginBottom: '10px', color: '#1e223c' }}>📍 Students Distribution</h3>
+        <p style={{ fontSize: '12px', color: '#555', marginBottom: '15px' }}>Interactive map showing registered students across Bangladesh</p>
+        <BangladeshMap />
+      //</div> 
+
+
+      <div className="action-bar"></div>
+
       <div className="action-bar">
         <div className="search-box">
           🔍 <input type="text" placeholder="Search..." />
@@ -56,11 +68,31 @@ function Dashboard({ setActivePage }) {
             <td>Tanveer Ratul</td>
             <td>01841499201</td>
             <td>Dhaka</td>
-            {/* Eye icon e click korle Student Profile page e jabe */}
             <td className="actions">
               <span onClick={() => setActivePage('studentProfile')}>👁️</span> ✏️ 🗑️
             </td>
           </tr>
+
+          <tr>
+            <td>05202602</td>
+            <td>Hasibul Hasan</td>
+            <td>01623894546</td>
+            <td>Comilla</td>
+            <td className="actions">
+              <span onClick={() => setActivePage('studentProfile')}>👁️</span> ✏️ 🗑️
+            </td>
+          </tr>
+
+          <tr>
+            <td>05202603</td>
+            <td>Mubasshir Jawad</td>
+            <td>01815536976</td>
+            <td>Bogura</td>
+            <td className="actions">
+              <span onClick={() => setActivePage('studentProfile')}>👁️</span> ✏️ 🗑️
+            </td>
+          </tr>
+
         </tbody>
       </table>
     </>

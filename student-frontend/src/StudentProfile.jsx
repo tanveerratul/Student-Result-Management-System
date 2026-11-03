@@ -48,6 +48,7 @@ function StudentProfile({ setActivePage }) {
         </div>
       </div>
 
+
       <div className="charts-container">
         
         <div className="chart-box">
