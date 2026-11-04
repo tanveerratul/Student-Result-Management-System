@@ -16,7 +16,6 @@ namespace student_backend.Models
         [ForeignKey("CourseId")]
         public Course? Course { get; set; }
 
-        // শুরুতে Marks এবং Grade null থাকবে (এনরোলমেন্টের সময় রেজাল্ট হয় না)
         public double? Marks { get; set; }
         public string? Grade { get; set; }
     }
