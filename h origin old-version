@@ -1,0 +1,14 @@
+[35morigin/master:.gitignore[m[36m:[m[32m186[m[36m:[m# but database connection strings (with potential [1;31mpassword[ms) will be unencrypted
+[35morigin/master:student-backend/.gitignore[m[36m:[m[32m194[m[36m:[m# but database connection strings (with potential [1;31mpassword[ms) will be unencrypted
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m33[m[36m:[m            // [1;31mPassword[m Encryption (Hashing)
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m34[m[36m:[m            string [1;31mpassword[mHash = BCrypt.Net.BCrypt.Hash[1;31mPassword[m(request.[1;31mPassword[m);
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m39[m[36m:[m                [1;31mPassword[mHash = [1;31mpassword[mHash,
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m60[m[36m:[m            // Varifying the [1;31mpassword[m
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m61[m[36m:[m            if (!BCrypt.Net.BCrypt.Verify(request.[1;31mPassword[m, user.[1;31mPassword[mHash))
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m63[m[36m:[m                return BadRequest("Wrong [1;31mpassword[m.");
+[35morigin/master:student-backend/Controllers/AuthController.cs[m[36m:[m[32m101[m[36m:[m        public string [1;31mPassword[m { get; set; } = string.Empty;
+[35morigin/master:student-backend/Migrations/20261103071413_InitialSetup.Designer.cs[m[36m:[m[32m113[m[36m:[m                    b.Property<string>("[1;31mPassword[mHash")
+[35morigin/master:student-backend/Migrations/20261103071413_InitialSetup.cs[m[36m:[m[32m35[m[36m:[m                    [1;31mPassword[mHash = table.Column<string>(type: "TEXT", nullable: false),
+[35morigin/master:student-backend/Migrations/AppDbContextModelSnapshot.cs[m[36m:[m[32m110[m[36m:[m                    b.Property<string>("[1;31mPassword[mHash")
+[35morigin/master:student-backend/Models/User.cs[m[36m:[m[32m14[m[36m:[m        public string [1;31mPassword[mHash { get; set; } = string.Empty;
+Binary file [35morigin/master:student-backend/student_db.db[m matches
