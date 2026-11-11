@@ -7,5 +7,5 @@ public class Course
     public string Title { get; set; } = string.Empty;
     public decimal Credit { get; set; }
 
-    public List<Result> Results { get; set; } = new();
+   public List<Enrollment> Enrollments { get; set; } = new();
 }

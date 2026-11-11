@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Result> Results => Set<Result>();
+    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -36,29 +37,28 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        b.Entity<Course>(e =>
-        {
-            e.HasIndex(x => x.CourseCode).IsUnique();
-            e.Property(x => x.CourseCode).HasMaxLength(20).IsRequired();
-            e.Property(x => x.Title).HasMaxLength(200).IsRequired();
-            e.Property(x => x.Credit).HasPrecision(3, 1);
-        });
+       b.Entity<Enrollment>(e =>
+{
+    // One enrollment per student per course
+    e.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
 
-        b.Entity<Result>(e =>
-        {
-            // The unique constraint we discussed: one result per student per course
-            e.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
+    e.HasOne(x => x.Student).WithMany(s => s.Enrollments)
+     .HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
 
-            e.Property(x => x.Marks).HasPrecision(5, 2);
-            e.Property(x => x.GradePoint).HasPrecision(3, 2);
-            e.Property(x => x.Grade).HasMaxLength(3).IsRequired();
+    // A course that has enrollments cannot be deleted
+    e.HasOne(x => x.Course).WithMany(c => c.Enrollments)
+     .HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Restrict);
+});
 
-            e.HasOne(x => x.Student).WithMany(s => s.Results)
-             .HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+b.Entity<Result>(e =>
+{
+    e.Property(x => x.Marks).HasPrecision(5, 2);
+    e.Property(x => x.GradePoint).HasPrecision(3, 2);
+    e.Property(x => x.Grade).HasMaxLength(3).IsRequired();
 
-            // Don't allow deleting a course that already has results
-            e.HasOne(x => x.Course).WithMany(c => c.Results)
-             .HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Restrict);
-        });
+    // One result per enrollment; deleted together with its enrollment
+    e.HasOne(x => x.Enrollment).WithOne(en => en.Result)
+     .HasForeignKey<Result>(x => x.EnrollmentId).OnDelete(DeleteBehavior.Cascade);
+});
     }
 }

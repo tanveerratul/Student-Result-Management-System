@@ -11,5 +11,5 @@ public class Student
     public string Division { get; set; } = string.Empty;
 
     public User User { get; set; } = null!;
-    public List<Result> Results { get; set; } = new();
+   public List<Enrollment> Enrollments { get; set; } = new();
 }
