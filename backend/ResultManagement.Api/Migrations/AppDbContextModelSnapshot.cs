@@ -31,24 +31,42 @@ namespace ResultManagement.Api.Migrations
 
                     b.Property<string>("CourseCode")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("text");
 
                     b.Property<decimal>("Credit")
-                        .HasPrecision(3, 1)
-                        .HasColumnType("numeric(3,1)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseCode")
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("ResultManagement.Api.Models.Enrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("StudentId", "CourseId")
                         .IsUnique();
 
-                    b.ToTable("Courses");
+                    b.ToTable("Enrollments");
                 });
 
             modelBuilder.Entity("ResultManagement.Api.Models.Result", b =>
@@ -59,7 +77,7 @@ namespace ResultManagement.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CourseId")
+                    b.Property<int>("EnrollmentId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Grade")
@@ -75,14 +93,9 @@ namespace ResultManagement.Api.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)");
 
-                    b.Property<int>("StudentId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("StudentId", "CourseId")
+                    b.HasIndex("EnrollmentId")
                         .IsUnique();
 
                     b.ToTable("Results");
@@ -165,16 +178,16 @@ namespace ResultManagement.Api.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ResultManagement.Api.Models.Result", b =>
+            modelBuilder.Entity("ResultManagement.Api.Models.Enrollment", b =>
                 {
                     b.HasOne("ResultManagement.Api.Models.Course", "Course")
-                        .WithMany("Results")
+                        .WithMany("Enrollments")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ResultManagement.Api.Models.Student", "Student")
-                        .WithMany("Results")
+                        .WithMany("Enrollments")
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -182,6 +195,17 @@ namespace ResultManagement.Api.Migrations
                     b.Navigation("Course");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("ResultManagement.Api.Models.Result", b =>
+                {
+                    b.HasOne("ResultManagement.Api.Models.Enrollment", "Enrollment")
+                        .WithOne("Result")
+                        .HasForeignKey("ResultManagement.Api.Models.Result", "EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
                 });
 
             modelBuilder.Entity("ResultManagement.Api.Models.Student", b =>
@@ -197,12 +221,17 @@ namespace ResultManagement.Api.Migrations
 
             modelBuilder.Entity("ResultManagement.Api.Models.Course", b =>
                 {
-                    b.Navigation("Results");
+                    b.Navigation("Enrollments");
+                });
+
+            modelBuilder.Entity("ResultManagement.Api.Models.Enrollment", b =>
+                {
+                    b.Navigation("Result");
                 });
 
             modelBuilder.Entity("ResultManagement.Api.Models.Student", b =>
                 {
-                    b.Navigation("Results");
+                    b.Navigation("Enrollments");
                 });
 
             modelBuilder.Entity("ResultManagement.Api.Models.User", b =>
