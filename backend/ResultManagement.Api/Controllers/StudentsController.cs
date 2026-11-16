@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ResultManagement.Api.Data;
 using ResultManagement.Api.Dtos;
 using ResultManagement.Api.Models;
+using ResultManagement.Api.Services;
 
 namespace ResultManagement.Api.Controllers;
 
@@ -135,6 +136,56 @@ public class StudentsController : ControllerBase
         _db.Users.Remove(student.User);
         await _db.SaveChangesAsync();
 
+        return NoContent();
+    }
+
+        [HttpPut("{id:int}/results")]
+    public async Task<IActionResult> SaveResults(int id, SaveResultsRequest request)
+    {
+        var student = await _db.Students
+            .Include(s => s.Enrollments).ThenInclude(e => e.Result)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (student is null) return NotFound();
+
+        // Every course in the request must be one the student is enrolled in
+        var enrolledIds = student.Enrollments.Select(e => e.CourseId).ToHashSet();
+        if (request.Results.Any(r => !enrolledIds.Contains(r.CourseId)))
+            return BadRequest(new { message = "The student is not enrolled in one or more of these courses." });
+
+        foreach (var entry in request.Results)
+        {
+            var enrollment = student.Enrollments.First(e => e.CourseId == entry.CourseId);
+
+            if (entry.Marks is null)
+            {
+                // Clear the result: the course goes back to "pending"
+                if (enrollment.Result is not null)
+                    _db.Results.Remove(enrollment.Result);
+                continue;
+            }
+
+            // The server decides the grade, never the client
+            var graded = GradeCalculator.Calculate(entry.Marks.Value);
+
+            if (enrollment.Result is null)
+            {
+                enrollment.Result = new Result
+                {
+                    Marks = entry.Marks.Value,
+                    Grade = graded.Grade,
+                    GradePoint = graded.GradePoint
+                };
+            }
+            else
+            {
+                enrollment.Result.Marks = entry.Marks.Value;
+                enrollment.Result.Grade = graded.Grade;
+                enrollment.Result.GradePoint = graded.GradePoint;
+            }
+        }
+
+        await _db.SaveChangesAsync();   // all marks are saved together, or none
         return NoContent();
     }
 
