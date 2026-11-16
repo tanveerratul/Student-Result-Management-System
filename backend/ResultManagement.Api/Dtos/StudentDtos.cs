@@ -42,3 +42,32 @@ public record StudentDetailDto(
 
 // A page of results plus the total count
 public record PagedResult<T>(List<T> Items, int Total, int Page, int PageSize);
+
+
+// What the admin sends when editing a student
+public class UpdateStudentRequest
+{
+    [Required, StringLength(30)]
+    public string StudentCode { get; set; } = string.Empty;
+
+    [Required, StringLength(150)]
+    public string FullName { get; set; } = string.Empty;
+
+    [Required, EmailAddress, StringLength(200)]
+    public string Email { get; set; } = string.Empty;
+
+    // Leave empty to keep the current password
+    [StringLength(100, MinimumLength = 8)]
+    public string? Password { get; set; }
+
+    [StringLength(20)]
+    public string Phone { get; set; } = string.Empty;
+
+    [StringLength(300)]
+    public string Address { get; set; } = string.Empty;
+
+    [Required]
+    public string Division { get; set; } = string.Empty;
+
+    public List<int> CourseIds { get; set; } = new();
+}

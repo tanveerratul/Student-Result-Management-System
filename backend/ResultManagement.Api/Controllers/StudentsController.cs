@@ -48,6 +48,97 @@ public class StudentsController : ControllerBase
         return new PagedResult<StudentListItemDto>(items, total, page, pageSize);
     }
 
+
+        [HttpPut("{id:int}")]
+    public async Task<ActionResult<StudentDetailDto>> Update(int id, UpdateStudentRequest request)
+    {
+        var student = await _db.Students
+            .Include(s => s.User)
+            .Include(s => s.Enrollments).ThenInclude(e => e.Course)
+            .Include(s => s.Enrollments).ThenInclude(e => e.Result)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (student is null) return NotFound();
+
+        var division = Divisions.All.FirstOrDefault(d =>
+            string.Equals(d, request.Division.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (division is null)
+            return BadRequest(new
+            {
+                message = $"Division must be one of: {string.Join(", ", Divisions.All)}."
+            });
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var code = request.StudentCode.Trim().ToUpperInvariant();
+
+        // The same email or code is fine for this student, but not for someone else
+        if (await _db.Users.AnyAsync(u => u.Email == email && u.Id != student.UserId))
+            return Conflict(new { message = "A user with this email already exists." });
+
+        if (await _db.Students.AnyAsync(s => s.StudentCode == code && s.Id != id))
+            return Conflict(new { message = $"Student code {code} already exists." });
+
+        var courseIds = request.CourseIds.Distinct().ToList();
+        var courses = await _db.Courses.Where(c => courseIds.Contains(c.Id)).ToListAsync();
+        if (courses.Count != courseIds.Count)
+            return BadRequest(new { message = "One or more selected courses do not exist." });
+
+        // Enrollments that are no longer selected
+        var toRemove = student.Enrollments
+            .Where(e => !courseIds.Contains(e.CourseId))
+            .ToList();
+
+        // Never delete an enrollment that already has a result
+        var blocked = toRemove.Where(e => e.Result is not null).ToList();
+        if (blocked.Count > 0)
+            return Conflict(new
+            {
+                message = "These courses already have results and cannot be removed: " +
+                          string.Join(", ", blocked.Select(e => e.Course.CourseCode)) + "."
+            });
+
+        // Update the simple fields
+        student.StudentCode = code;
+        student.FullName = request.FullName.Trim();
+        student.Phone = request.Phone.Trim();
+        student.Address = request.Address.Trim();
+        student.Division = division;
+        student.User.Email = email;
+
+        if (!string.IsNullOrWhiteSpace(request.Password))
+            student.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        // Remove the old enrollments, add the new ones
+        _db.Enrollments.RemoveRange(toRemove);
+
+        var existingCourseIds = student.Enrollments.Select(e => e.CourseId).ToHashSet();
+        foreach (var course in courses.Where(c => !existingCourseIds.Contains(c.Id)))
+            student.Enrollments.Add(new Enrollment { Course = course });
+
+        await _db.SaveChangesAsync();
+
+        // Reload so the reply matches the database exactly
+        _db.ChangeTracker.Clear();
+        return await GetById(id);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var student = await _db.Students
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (student is null) return NotFound();
+
+        // Deleting the user also deletes the student, enrollments, and results (cascade)
+        _db.Users.Remove(student.User);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<StudentDetailDto>> GetById(int id)
     {
